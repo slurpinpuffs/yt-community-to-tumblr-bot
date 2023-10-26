@@ -2,26 +2,22 @@ const tumblr = require('tumblr.js');
 const fs = require('fs');
 const https = require('https');
 const { Innertube } = require('youtubei.js');
-// Authenticate Tumblr acc via OAuth
+// CHANGE THIS: Authenticate Tumblr acc via OAuth
 const client = tumblr.createClient({
   consumer_key: '',
   consumer_secret: '',
   token: '',
   token_secret: ''
 });
-const blogToPost = 'example-blog';
+// CHANGE THIS: The name of the blog you own that you want to post to
+const blogToPost = 'example-blog-name';
+// CHANGE THIS: These tags will be posted with every post
 const tumblrTags = ["tags", "like", "this"];
 
-let lastUpdateLocation = __dirname + '/last_update.txt';
-
-// Example ID: Marisa Honkai's channel ID
+// CHANGE THIS: Example ID is Marisa Honkai's channel ID
 let youtubeChannelId = 'UC0S7OwBRuCYyeZrM6dq9Ykg';
 
-async function getBlogInfo(blogName){
-  // Make the request
-  var response = await client.blogInfo(blogName);
-  return response;
-}
+let lastUpdateLocation = __dirname + '/last_update.txt';
 
 async function createTextPost(blogName, text){
   await client.createPost(blogName, {
@@ -37,7 +33,6 @@ async function createTextPost(blogName, text){
 }
 
 async function createTextPostWithImages(blogName, text, mediaUrlArray){
-  // To-do: make post multiple images
   let index = 0;
   let content = [{
     type: 'text',
@@ -141,22 +136,6 @@ function getRecentCommPicUrl(community){
     return imageUrls;
   }else if(community.current_tab.content.contents[0].contents[0].post.attachment.type == 'BackstageImage'){
     return [community.current_tab.content.contents[0].contents[0].post.attachment.image[0].url];
-  }
-}
-
-function getCommText(community, postIndex){
-  return community.current_tab.content.contents[0].contents[postIndex].post.content.text;
-}
-
-function getCommPicUrl(community, postIndex){
-  if(community.current_tab.content.contents[0].contents[postIndex].post.attachment.type == 'PostMultiImage'){
-    var images = community.current_tab.content.contents[0].contents[postIndex].post.attachment.images;
-    var imageUrls = [];
-    images.forEach((image) => imageUrls.push(image.image[0].url));
-
-    return imageUrls;
-  }else if(community.current_tab.content.contents[0].contents[postIndex].post.attachment.type == 'BackstageImage'){
-    return [community.current_tab.content.contents[0].contents[postIndex].post.attachment.image[0].url];
   }
 }
 
