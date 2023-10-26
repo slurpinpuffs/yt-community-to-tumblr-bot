@@ -128,7 +128,7 @@ function postToTumblrWithImages(post, imageUrlArray, source){
 
   function waitForDownload(){
     if(imageCount != imageUrlArray.length){
-      setTimeout(waitForDownload, 100)
+      setTimeout(waitForDownload, 100);
     }else{
       createTextPostWithImages(blogToPost, post, images, source);
 
@@ -159,15 +159,50 @@ function getRecentCommPostUrl(community){
   return postUrl;
 }
 
-function getRecentCommPicUrl(community){
+function getRecentCommPicUrl(community, cb){
+  var imageUrls = [];
+
   if(community.current_tab.content.contents[0].contents[0].post.attachment.type == 'PostMultiImage'){
     var images = community.current_tab.content.contents[0].contents[0].post.attachment.images;
-    var imageUrls = [];
     images.forEach((image) => imageUrls.push(image.image[0].url));
 
-    return imageUrls;
+    cb(null, imageUrls);
   }else if(community.current_tab.content.contents[0].contents[0].post.attachment.type == 'BackstageImage'){
-    return [community.current_tab.content.contents[0].contents[0].post.attachment.image[0].url];
+    //return [community.current_tab.content.contents[0].contents[0].post.attachment.image[0].url];
+
+    // If post has just one pic, grabs full pic from post URL
+    var htmlLocation = "C:\\Users\\Shakw\\Desktop\\NodeProjects\\hi3-updates-bot\\yt-community-to-tumblr-bot\\post.html";
+    var link = " ";
+    var file = fs.createWriteStream(htmlLocation);
+
+    https.get(getRecentCommPostUrl(community), response => {
+        response.pipe(file);
+
+        file.on('finish', () => {
+          file.close();
+          console.log(`File downloaded as ${htmlLocation}`);
+          fs.readFile(htmlLocation, (err, data) => {
+            if(err) throw err;
+            if(data.includes('https://yt3.ggpht.com')){
+              console.log("Found it!");
+              link = data.toString();
+              link = link.substring(link.lastIndexOf("https://yt3.ggpht.com"));
+              link = link.substring(0, link.indexOf('"'));
+              imageUrls.push(link);
+              cb(null, imageUrls);
+            }else{
+              console.log("Can't find image link in html.");
+              imageUrls.push(community.current_tab.content.contents[0].contents[0].post.attachment.image[0].url);
+              cb(null, imageUrls);
+            }
+          });
+        });
+    }).on('error', () => {
+        fs.unlink(htmlLocation);
+        console.error(`Error downloading html: ${htmlLocation}. Returning thumbnail.`);
+        imageUrls.push(community.current_tab.content.contents[0].contents[0].post.attachment.image[0].url);
+        cb(null, imageUrls);
+    });
   }
 }
 
@@ -196,8 +231,13 @@ async function checkForCommPost(channel){
         console.log("Community post already posted on Tumblr!");
       }else{
         if(isRecentPostImage(community)){
-          var imageUrlArray = getRecentCommPicUrl(community);
-          postToTumblrWithImages(latestPost, imageUrlArray, source);
+          var imageUrlArray;
+
+          getRecentCommPicUrl(community, (err, value) => {
+            if(err) return console.error(err);
+            imageUrlArray = value;
+            postToTumblrWithImages(latestPost, imageUrlArray, source);
+          });
         }else{
           postToTumblr(latestPost, source);
         }

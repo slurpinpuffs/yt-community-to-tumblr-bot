@@ -7,4 +7,4 @@ Checks for updates every 10 seconds after start. To change this, change the mill
 
 Current limitations:
 - Long links will sometimes be broken with an elipses due to links being shortened by YouTube
-- All pictures are square, so some parts may get cut off
+- Images in posts with multiple images will be square, so some parts may be cropped out
