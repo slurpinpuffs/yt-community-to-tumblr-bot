@@ -18,6 +18,7 @@ const tumblrTags = ["tags", "like", "this"];
 let youtubeChannelId = 'UC0S7OwBRuCYyeZrM6dq9Ykg';
 
 let lastUpdateLocation = __dirname + '/last_update.txt';
+let millisecondsToWait = 10000;
 
 async function createTextPost(blogName, text){
   await client.createPost(blogName, {
@@ -188,5 +189,5 @@ async function testPrint(channel){
 
   checkForCommPost(channel);
   // Checks for updates every 10 seconds after launch
-  setInterval(checkForCommPost, 10000, channel);
+  setInterval(checkForCommPost, millisecondsToWait, channel);
 })();
