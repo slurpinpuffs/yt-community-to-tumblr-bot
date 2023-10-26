@@ -20,20 +20,32 @@ let youtubeChannelId = 'UC0S7OwBRuCYyeZrM6dq9Ykg';
 let lastUpdateLocation = __dirname + '/last_update.txt';
 let millisecondsToWait = 10000;
 
-async function createTextPost(blogName, text){
+async function createTextPost(blogName, text, sourceUrl){
   await client.createPost(blogName, {
       content: [
         {
           type: 'text',
           text: text,
         },
+        {
+          type: 'text',
+          text: 'Original Post',
+          formatting: [
+            {
+              start: 0,
+              end: 13,
+              type: 'link',
+              url: sourceUrl
+            }
+          ]
+        }
       ],
       tags: tumblrTags
     }
   );
 }
 
-async function createTextPostWithImages(blogName, text, mediaUrlArray){
+async function createTextPostWithImages(blogName, text, mediaUrlArray, sourceUrl){
   let index = 0;
   let content = [{
     type: 'text',
@@ -48,6 +60,19 @@ async function createTextPostWithImages(blogName, text, mediaUrlArray){
     index++;
   });
 
+  content.push({
+    type: 'text',
+    text: 'Original Post',
+    formatting: [
+      {
+        start: 0,
+        end: 13,
+        type: 'link',
+        url: sourceUrl
+      }
+    ]
+  });
+
   await client.createPost(blogName, {
       content: content,
       tags: tumblrTags
@@ -55,10 +80,10 @@ async function createTextPostWithImages(blogName, text, mediaUrlArray){
   );
 }
 
-function postToTumblr(post){
+function postToTumblr(post, source){
 
   // Posts to Tumblr without image
-  createTextPost(blogToPost, post);
+  createTextPost(blogToPost, post, source);
 
   // Logs post to console
   console.log(`${new Date().toString()}:`);
@@ -73,7 +98,7 @@ function postToTumblr(post){
   });
 }
 
-function postToTumblrWithImages(post, imageUrlArray){
+function postToTumblrWithImages(post, imageUrlArray, source){
   // Posts to Tumblr without image
   let images = [];
   let baseImageLocation = __dirname + '\\image';
@@ -105,7 +130,7 @@ function postToTumblrWithImages(post, imageUrlArray){
     if(imageCount != imageUrlArray.length){
       setTimeout(waitForDownload, 100)
     }else{
-      createTextPostWithImages(blogToPost, post, images);
+      createTextPostWithImages(blogToPost, post, images, source);
 
       // Logs post to console
       console.log(`${new Date().toString()}:`);
@@ -126,6 +151,12 @@ function postToTumblrWithImages(post, imageUrlArray){
 
 function getRecentCommText(community){
   return community.current_tab.content.contents[0].contents[0].post.content.text;
+}
+
+function getRecentCommPostUrl(community){
+  var postId = community.current_tab.content.contents[0].contents[0].post.id;
+  var postUrl = 'https://www.youtube.com/channel/' + youtubeChannelId + '/community?lb=' + postId;
+  return postUrl;
 }
 
 function getRecentCommPicUrl(community){
@@ -156,6 +187,7 @@ async function checkForCommPost(channel){
 
   try{
     var latestPost = getRecentCommText(community);
+    var source = getRecentCommPostUrl(community);
 
     fs.readFile(lastUpdateLocation, (err, data) => {
       if(err) throw err;
@@ -165,9 +197,9 @@ async function checkForCommPost(channel){
       }else{
         if(isRecentPostImage(community)){
           var imageUrlArray = getRecentCommPicUrl(community);
-          postToTumblrWithImages(latestPost, imageUrlArray);
+          postToTumblrWithImages(latestPost, imageUrlArray, source);
         }else{
-          postToTumblr(latestPost);
+          postToTumblr(latestPost, source);
         }
       }
     });
@@ -175,12 +207,6 @@ async function checkForCommPost(channel){
     console.error(error.message);
   };
 };
-
-async function testPrint(channel){
-  var community = await channel.getCommunity();
-
-  console.log(community.current_tab.content);
-}
 
 (async () => {
   const youtube = await Innertube.create(); 
