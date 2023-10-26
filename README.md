@@ -2,6 +2,7 @@
 Bot that gets YouTube community posts from a given channel and posts to Tumblr.
 
 To use, download files, change the 4 variables in index.js that are marked "CHANGE THIS:", then run index.js.
+
 Checks for updates every 10 seconds after start. To change this, change the millisecondsToWait variable in index.js.
 
 Current limitations:
