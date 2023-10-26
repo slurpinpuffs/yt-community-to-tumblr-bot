@@ -185,7 +185,6 @@ async function testPrint(channel){
 (async () => {
   const youtube = await Innertube.create(); 
   const channel = await youtube.getChannel(youtubeChannelId); 
-  var community = await channel.getCommunity();
 
   checkForCommPost(channel);
   // Checks for updates every 10 seconds after launch
