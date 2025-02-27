@@ -1,5 +1,5 @@
 node_modules/
+*.jpg
+*.txt
+*.html
 .env
-last_video.txt
-last_update.txt
-post.html
