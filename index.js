@@ -18,7 +18,7 @@ const youtubeChannelId = process.env.YT_CHANNEL_ID;
 
 const millisecondsToWait = process.env.MS_BETWEEN_CHECKS;
 let lastUpdateLocation = `${__dirname}/last_update.txt`;
-let lastVideoLocation = `${__dirname}/last_video.txt`
+let lastVideoLocation = `${__dirname}/last_video.txt`;
 
 
 async function createTextPost(blogName, text, sourceUrl){
@@ -62,13 +62,7 @@ async function createVideoPost(blogName, title, vidUrl){
             url: vidUrl
           }
         ]
-      },
-      /*
-      {
-        type: 'image',
-        media: fs.createReadStream(thumbnail),
       }
-        */
     ],
     tags: tumblrTags
   });
@@ -147,7 +141,7 @@ function postToTumblr(post, source, isVid = false){
 
   // Saves copy of post to file
   if (isVid){
-    fs.writeFile(lastVideoLocation, post, function(err) {
+    fs.writeFile(lastVideoLocation, source, function(err) {
       if(err){
         return console.log(err);
       }
