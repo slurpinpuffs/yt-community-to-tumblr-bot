@@ -2,23 +2,24 @@ const tumblr = require('tumblr.js');
 const fs = require('fs');
 const https = require('https');
 const { Innertube } = require('youtubei.js');
+const { blogUrl } = require('tumblr/lib/request');
+const dotenv = require('dotenv').config()
 // CHANGE THIS: Authenticate Tumblr acc via OAuth
 const client = tumblr.createClient({
-  consumer_key: '',
-  consumer_secret: '',
-  token: '',
-  token_secret: ''
+  consumer_key: process.env.CONSUMER_KEY,
+  consumer_secret: process.env.CONSUMER_SECRET,
+  token: process.env.TOKEN,
+  token_secret: process.env.TOKEN_SECRET
 });
-// CHANGE THIS: The name of the blog you own that you want to post to
-const blogToPost = 'example-blog-name';
-// CHANGE THIS: These tags will be posted with every post
-const tumblrTags = ["tags", "like", "this"];
+const blogToPost = process.env.BLOG_TO_POST;
+const tumblrTags = process.env.TUMBLR_TAGS.split(',');
 
-// CHANGE THIS: Example ID is Marisa Honkai's channel ID
-let youtubeChannelId = 'UC0S7OwBRuCYyeZrM6dq9Ykg';
+const youtubeChannelId = process.env.YT_CHANNEL_ID;
 
-let lastUpdateLocation = __dirname + '/last_update.txt';
-let millisecondsToWait = 10000;
+const millisecondsToWait = process.env.MS_BETWEEN_CHECKS;
+let lastUpdateLocation = `${__dirname}/last_update.txt`;
+let lastVideoLocation = `${__dirname}/last_video.txt`
+
 
 async function createTextPost(blogName, text, sourceUrl){
   await client.createPost(blogName, {
@@ -44,6 +45,35 @@ async function createTextPost(blogName, text, sourceUrl){
     }
   );
 }
+
+
+async function createVideoPost(blogName, title, vidUrl){
+  var len = title.length;
+  await client.createPost(blogName, {
+    content: [
+      {
+        type: 'text',
+        text: title,
+        formatting: [
+          {
+            start: 0,
+            end: len,
+            type: 'link',
+            url: vidUrl
+          }
+        ]
+      },
+      /*
+      {
+        type: 'image',
+        media: fs.createReadStream(thumbnail),
+      }
+        */
+    ],
+    tags: tumblrTags
+  });
+}
+
 
 async function createTextPostWithImages(blogName, text, mediaUrlArray, sourceUrl){
   let index = 0;
@@ -80,23 +110,59 @@ async function createTextPostWithImages(blogName, text, mediaUrlArray, sourceUrl
   );
 }
 
-function postToTumblr(post, source){
 
+/*
+// Finish later, adding thumbnail to video posts
+function PostVidToTumblr(title, url, thumbnail){
   // Posts to Tumblr without image
-  createTextPost(blogToPost, post, source);
+  createVideoPost(blogToPost, title, url, thumbnail);
 
   // Logs post to console
   console.log(`${new Date().toString()}:`);
   console.log(`Posted:\n${post}`);
 
   // Saves copy of post to file
-  fs.writeFile(lastUpdateLocation, post, function(err) {
+  fs.writeFile(lastVideoLocation, post, function(err) {
     if(err){
       return console.log(err);
     }
-    console.log("Last post updated!");
+    console.log("Last video updated!");
   });
 }
+*/
+
+
+function postToTumblr(post, source, isVid = false){
+
+  // Posts to Tumblr without image
+  if(isVid){
+    createVideoPost(blogToPost, post, source);
+  }else{
+    createTextPost(blogToPost, post, source);
+  }
+
+  // Logs post to console
+  console.log(`${new Date().toString()}:`);
+  console.log(`Posted:\n${post}`);
+
+  // Saves copy of post to file
+  if (isVid){
+    fs.writeFile(lastVideoLocation, post, function(err) {
+      if(err){
+        return console.log(err);
+      }
+      console.log("Last video updated!");
+    });
+  }else{
+    fs.writeFile(lastUpdateLocation, post, function(err) {
+      if(err){
+        return console.log(err);
+      }
+      console.log("Last post updated!");
+    });
+  }
+}
+
 
 function postToTumblrWithImages(post, imageUrlArray, source){
   // Posts to Tumblr without image
@@ -149,15 +215,18 @@ function postToTumblrWithImages(post, imageUrlArray, source){
   waitForDownload();
 }
 
+
 function getRecentCommText(community){
   return community.current_tab.content.contents[0].contents[0].post.content.text;
 }
+
 
 function getRecentCommPostUrl(community){
   var postId = community.current_tab.content.contents[0].contents[0].post.id;
   var postUrl = 'https://www.youtube.com/channel/' + youtubeChannelId + '/community?lb=' + postId;
   return postUrl;
 }
+
 
 function getRecentCommPicUrl(community, cb){
   var imageUrls = [];
@@ -206,6 +275,7 @@ function getRecentCommPicUrl(community, cb){
   }
 }
 
+
 function isRecentPostImage(community){
   if(community.current_tab.content.contents[0].contents[0].post.attachment.type == 'PostMultiImage'){
     return true;
@@ -215,6 +285,7 @@ function isRecentPostImage(community){
     return false;
   }
 }
+
 
 async function checkForCommPost(channel){
 
@@ -245,14 +316,51 @@ async function checkForCommPost(channel){
     });
   }catch (error){
     console.error(error.message);
-  };
-};
+  }
+}
+
+
+function getVideoURL(video){
+  var id = video.id;
+  return "www.youtube.com/watch?v=" + id;
+}
+
+
+function getVideoTitle(video){
+  return String(video.title);
+}
+
+
+async function checkForVideoUpload(channel){
+  try{
+    var latestVideo = await channel.videos[0];
+    var latestVidLink = getVideoURL(latestVideo);
+    var latestVidTitle = getVideoTitle(latestVideo);
+
+    if (!latestVideo.is_upcoming){
+      fs.readFile(lastVideoLocation, (err, data) => {
+        if(err) throw err;
+        if(data == latestVidLink){
+          console.log(`${new Date().toString()}:`);
+          console.log("Video already posted on Tumblr!");
+        }else{
+          postToTumblr(latestVidTitle, latestVidLink, true);
+        }
+      });
+    }
+  }catch (error){
+    console.error(error.message);
+  }
+}
+
 
 (async () => {
   const youtube = await Innertube.create(); 
   const channel = await youtube.getChannel(youtubeChannelId); 
 
   checkForCommPost(channel);
+  checkForVideoUpload(channel);
   // Checks for updates every 10 seconds after launch
   setInterval(checkForCommPost, millisecondsToWait, channel);
+  setInterval(checkForVideoUpload, millisecondsToWait, channel);
 })();

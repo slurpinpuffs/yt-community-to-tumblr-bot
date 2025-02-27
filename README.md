@@ -1,9 +1,9 @@
 # yt-community-to-tumblr-bot
-Bot that gets YouTube community posts from a given channel and posts to Tumblr.
+Bot that gets YouTube community posts and YouTube video posts from a given channel and posts them to Tumblr.
 
-To use, download files, change the 4 variables in index.js that are marked "CHANGE THIS:", then run index.js.
+To use, download files, change the variables in .env, then run index.js.
 
-Checks for updates every 10 seconds after start. To change this, change the millisecondsToWait variable in index.js.
+Checks for updates every 10 seconds after start. To change this, change the MS_BETWEEN_CHECKS variable in .env.
 
 Current limitations:
 - Long links will sometimes be broken with an elipses due to links being shortened by YouTube
