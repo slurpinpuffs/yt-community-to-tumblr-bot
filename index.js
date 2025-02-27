@@ -171,7 +171,7 @@ function getRecentCommPicUrl(community, cb){
     //return [community.current_tab.content.contents[0].contents[0].post.attachment.image[0].url];
 
     // If post has just one pic, grabs full pic from post URL
-    var htmlLocation = "C:\\Users\\Shakw\\Desktop\\NodeProjects\\hi3-updates-bot\\yt-community-to-tumblr-bot\\post.html";
+    var htmlLocation = __dirname + "/post.html";
     var link = " ";
     var file = fs.createWriteStream(htmlLocation);
 
