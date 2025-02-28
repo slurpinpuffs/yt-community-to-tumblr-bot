@@ -217,7 +217,7 @@ function getRecentCommText(community){
 
 function getRecentCommPostUrl(community){
   var postId = community.current_tab.content.contents[0].contents[0].post.id;
-  var postUrl = 'https://www.youtube.com/channel/' + youtubeChannelId + '/community?lb=' + postId;
+  var postUrl = `https://www.youtube.com/channel/'${youtubeChannelId}/community?lb=${postId}`;
   return postUrl;
 }
 
@@ -234,7 +234,7 @@ function getRecentCommPicUrl(community, cb){
     //return [community.current_tab.content.contents[0].contents[0].post.attachment.image[0].url];
 
     // If post has just one pic, grabs full pic from post URL
-    var htmlLocation = __dirname + "/post.html";
+    var htmlLocation = `${__dirname}/post.html`;
     var link = " ";
     var file = fs.createWriteStream(htmlLocation);
 
@@ -316,7 +316,7 @@ async function checkForCommPost(channel){
 
 function getVideoURL(video){
   var id = video.id;
-  return "www.youtube.com/watch?v=" + id;
+  return `www.youtube.com/watch?v=${id}`;
 }
 
 
