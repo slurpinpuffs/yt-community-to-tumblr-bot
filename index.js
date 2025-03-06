@@ -326,8 +326,10 @@ function getVideoTitle(video){
 
 
 async function checkForVideoUpload(channel){
+  
   try{
-    var latestVideo = await channel.videos[0];
+    var latestVideos = await channel.getVideos();
+    var latestVideo = latestVideos.videos[0];
     var latestVidLink = getVideoURL(latestVideo);
     var latestVidTitle = getVideoTitle(latestVideo);
 
